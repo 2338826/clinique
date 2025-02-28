@@ -83,7 +83,7 @@ class CliniqueRepository extends Repository
     public function modifierClinique($cliniqueDTO)
     {
         try {
-            $pdo = new PDO($this->stringConnexion, $this->usager, $this->password);
+            $pdo = new PDO($this->stringConnexion, $this->usager, $this->motDePasse);
             $ins = $pdo->prepare("UPDATE cliniques " .
                 "SET adresse=?,ville=?,province=?,codePostal=?,telephone=?,courriel=? " .
                 "WHERE nom=?");
@@ -94,7 +94,7 @@ class CliniqueRepository extends Repository
     public function supprimerClinique($nomClinique)
     {
         try {
-            $pdo = new PDO($this->stringConnexion, $this->usager, $this->password);
+            $pdo = new PDO($this->stringConnexion, $this->usager, $this->motDePasse);
             $ins = $pdo->prepare("DELETE FROM cliniques " .
                 "WHERE nom=?");
             $ins->execute(array($nomClinique));
@@ -105,14 +105,26 @@ class CliniqueRepository extends Repository
     //Méthode permettant d'obtenir le id d'une clinique par son nom...
     public function obtenirIdClinique($nomClinique)
     {
-        $pdo = new PDO($this->stringConnexion, $this->usager, $this->password);
-        $ins = $pdo->prepare("SELECT id FROM cliniques " .
-            "WHERE nom=?");
-        $ins->setFetchMode(PDO::FETCH_ASSOC);
-        $ins->execute(array($nomClinique));
-        $resultat = $ins->fetch();
-        $idPatient = $resultat["id"];
-        return $idPatient;
+        try {
+            $pdo = new PDO($this->stringConnexion, $this->usager, $this->motDePasse);
+            $ins = $pdo->prepare("SELECT id FROM cliniques WHERE nom = ?");
+            $ins->setFetchMode(PDO::FETCH_ASSOC);
+
+
+            $ins->execute(array($nomClinique));
+            $resultat = $ins->fetch();
+
+
+            if ($resultat === false) {
+                // Si aucun résultat trouvé
+                return null;
+            }
+
+            return $resultat["id"];
+        } catch (PDOException $e) {
+            echo "Erreur PDO : " . $e->getMessage();
+            return null;
+        }
     }
 }
 ?>
